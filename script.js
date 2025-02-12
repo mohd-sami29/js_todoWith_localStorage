@@ -16,11 +16,12 @@ window.onload = () => {
   getFromLocalStorage();
 };
 
+// Retrieve tasks from local storage or initialize an empty array
 let itemsArray = localStorage.getItem("items")
   ? JSON.parse(localStorage.getItem("items"))
   : [];
 
-// Add task to local storage (Prevents duplicate tasks)
+// Function to add task to local storage (Prevents duplicate tasks)
 const addToLocalStorage = () => {
   let task = inputBox.value.trim();
 
@@ -29,18 +30,18 @@ const addToLocalStorage = () => {
     return;
   }
 
-  if (itemsArray.includes(task)) {
+  if (itemsArray.some(item => item.text === task)) {
     alert("This task already exists!");
     return;
   }
 
-  itemsArray.push(task);
+  itemsArray.push({ text: task, completed: false }); // Store task text & completion status
   localStorage.setItem("items", JSON.stringify(itemsArray));
   inputBox.value = "";
   getFromLocalStorage();
 };
 
-// Fetch tasks from local storage and display them
+// Function to fetch tasks from local storage and display them
 const getFromLocalStorage = () => {
   list.innerHTML = ""; // Clear list before appending new items
   itemsArray.forEach((item, index) => {
@@ -48,8 +49,21 @@ const getFromLocalStorage = () => {
     li.id = index;
 
     let divTag = document.createElement("div");
+    
+    // Create checkbox
+    let checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = item.completed; // Set checkbox state
+    checkbox.classList.add("task-checkbox");
+
+    // Create span to hold task text
     let span = document.createElement("span");
-    span.textContent = item;
+    span.textContent = item.text;
+    if (item.completed) {
+      span.classList.add("completed-task"); // Add strikethrough if completed
+    }
+
+    divTag.appendChild(checkbox);
     divTag.appendChild(span);
     li.appendChild(divTag);
 
@@ -70,6 +84,13 @@ const getFromLocalStorage = () => {
     li.appendChild(div);
     list.appendChild(li);
 
+    // Handle checkbox change event
+    checkbox.addEventListener("change", () => {
+      itemsArray[index].completed = checkbox.checked;
+      localStorage.setItem("items", JSON.stringify(itemsArray));
+      span.classList.toggle("completed-task", checkbox.checked);
+    });
+
     // Edit task functionality
     editBtn.addEventListener("click", () => {
       let inputField = document.createElement("input");
@@ -77,6 +98,10 @@ const getFromLocalStorage = () => {
       inputField.value = span.textContent;
       li.innerHTML = "";
       li.appendChild(inputField);
+
+      let buttonContainer = document.createElement("div");
+      buttonContainer.style.display = "flex";
+      buttonContainer.style.gap = "10px";
 
       let saveBtn = document.createElement("button");
       saveBtn.textContent = "Save";
@@ -86,24 +111,22 @@ const getFromLocalStorage = () => {
       cancelBtn.textContent = "Cancel";
       cancelBtn.classList.add("cancel-btn");
 
-      li.appendChild(saveBtn);
-      li.appendChild(cancelBtn);
+      buttonContainer.appendChild(saveBtn);
+      buttonContainer.appendChild(cancelBtn);
+      li.appendChild(buttonContainer);
 
       // Save edited task
       saveBtn.addEventListener("click", () => {
         let newValue = inputField.value.trim();
-
         if (!newValue) {
           alert("Task cannot be empty!");
           return;
         }
-
-        if (itemsArray.includes(newValue)) {
+        if (itemsArray.some(item => item.text === newValue)) {
           alert("This task already exists!");
           return;
         }
-
-        itemsArray[index] = newValue;
+        itemsArray[index].text = newValue;
         localStorage.setItem("items", JSON.stringify(itemsArray));
         getFromLocalStorage();
       });
