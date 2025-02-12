@@ -1,175 +1,130 @@
 let inputBox = document.querySelector("input");
-
 let add = document.querySelector(".add-btn");
-
 let list = document.querySelector(".list-items");
-
 let currentDate = document.querySelector(".date");
 
 // Display current date
-
 const displayDate = () => {
   let date = new Date();
-
   date = date.toDateString();
-
   currentDate.textContent = date;
 };
 
-// On window reload or refresh getFromLocalStorage and displayDate function called
-
+// Load local storage items on page load
 window.onload = () => {
-  getFromLocalStorage();
-
   displayDate();
-};
-
-// Add event listener on add task button
-
-add.addEventListener("click", (e) => {
-  e.preventDefault();
-
-  addToLocalStorage(inputBox);
-
   getFromLocalStorage();
-});
+};
 
 let itemsArray = localStorage.getItem("items")
   ? JSON.parse(localStorage.getItem("items"))
   : [];
 
-// Add list items to localstorage
+// Add task to local storage (Prevents duplicate tasks)
+const addToLocalStorage = () => {
+  let task = inputBox.value.trim();
 
-const addToLocalStorage = (inputBox) => {
-  itemsArray.push(inputBox.value);
+  if (!task) {
+    alert("Please enter a valid task!");
+    return;
+  }
 
+  if (itemsArray.includes(task)) {
+    alert("This task already exists!");
+    return;
+  }
+
+  itemsArray.push(task);
   localStorage.setItem("items", JSON.stringify(itemsArray));
-
-  console.log(itemsArray);
+  inputBox.value = "";
+  getFromLocalStorage();
 };
 
-// Get list items from localstorage
-
+// Fetch tasks from local storage and display them
 const getFromLocalStorage = () => {
+  list.innerHTML = ""; // Clear list before appending new items
   itemsArray.forEach((item, index) => {
     let li = document.createElement("li");
-
     li.id = index;
 
     let divTag = document.createElement("div");
-
     let span = document.createElement("span");
-
     span.textContent = item;
-
     divTag.appendChild(span);
-
     li.appendChild(divTag);
 
     let div = document.createElement("div");
 
+    // Create edit button
     let editBtn = document.createElement("button");
-
     editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
+    editBtn.classList.add("edit-btn");
+
+    // Create delete button
+    let deleteBtn = document.createElement("button");
+    deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+    deleteBtn.classList.add("delete-btn");
 
     div.appendChild(editBtn);
-
-    let deleteBtn = document.createElement("button");
-
-    deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-
     div.appendChild(deleteBtn);
-
     li.appendChild(div);
-
     list.appendChild(li);
 
-    inputBox.value = "";
-
-    let inputField = document.createElement("input");
-
-    let saveBtn = document.createElement("button");
-
-    saveBtn.textContent = "Save";
-
-    let cancelBtn = document.createElement("button");
-
-    cancelBtn.textContent = "Cancel";
-
-    // Add event listener on edit button
-
-    editBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-
-      let temp = span.textContent;
-
-      li.textContent = "";
-
+    // Edit task functionality
+    editBtn.addEventListener("click", () => {
+      let inputField = document.createElement("input");
+      inputField.type = "text";
+      inputField.value = span.textContent;
+      li.innerHTML = "";
       li.appendChild(inputField);
 
-      inputField.value = temp;
+      let saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save";
+      saveBtn.classList.add("save-btn");
 
-      inputField.focus();
+      let cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.classList.add("cancel-btn");
 
       li.appendChild(saveBtn);
-
       li.appendChild(cancelBtn);
-    });
 
-    // Add event listner on delete button
+      // Save edited task
+      saveBtn.addEventListener("click", () => {
+        let newValue = inputField.value.trim();
 
-    deleteBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      deleteItem(index);
-    });
+        if (!newValue) {
+          alert("Task cannot be empty!");
+          return;
+        }
 
-    let deleteItem = (id) => {
-      let result = itemsArray.filter((index) => {
-       return index == id
+        if (itemsArray.includes(newValue)) {
+          alert("This task already exists!");
+          return;
+        }
+
+        itemsArray[index] = newValue;
+        localStorage.setItem("items", JSON.stringify(itemsArray));
+        getFromLocalStorage();
       });
-      console.log("items",itemsArray);
-      console.log("result",result);
-      console.log("id",id);
-      console.log("index",index);
 
-    };
-
-    // Add event listener on save button
-
-    saveBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-
-      li.textContent = "";
-
-      span.textContent = inputField.value;
-
-      li.appendChild(span);
-
-      div.appendChild(editBtn);
-
-      div.appendChild(deleteBtn);
-
-      li.appendChild(div);
+      // Cancel editing
+      cancelBtn.addEventListener("click", () => {
+        getFromLocalStorage();
+      });
     });
 
-    // Add event listener on cancel button
-
-    cancelBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-
-      let temp = inputField.value;
-
-      li.textContent = "";
-
-      span.textContent = temp;
-
-      li.appendChild(span);
-
-      div.appendChild(editBtn);
-
-      div.appendChild(deleteBtn);
-
-      li.appendChild(div);
+    // Delete task functionality
+    deleteBtn.addEventListener("click", () => {
+      itemsArray.splice(index, 1);
+      localStorage.setItem("items", JSON.stringify(itemsArray));
+      getFromLocalStorage();
     });
   });
 };
+
+// Add event listener to the Add Task button
+add.addEventListener("click", (e) => {
+  e.preventDefault();
+  addToLocalStorage();
+});
