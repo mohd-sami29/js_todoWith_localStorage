@@ -246,3 +246,15 @@ ul li button:hover {
 .cancel-btn:hover {
   background-color: gray;
 }
+
+.completed-task {
+  text-decoration: line-through;
+  color: gray;
+}
+
+.task-checkbox {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
